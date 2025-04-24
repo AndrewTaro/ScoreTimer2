@@ -49,7 +49,7 @@
 		(var teamType:str = "isAlly ? 'Ally' : 'Enemy'")
 		(var itemName:str = "ST2_ELEMENT_NAME + teamType")
 		(var defaultPos:dict = "{'positionX': isAlly ? (stageWidth/2 - ST2_SIZE.X - ST2_DEFAULT_OFFSET.X) : (stageWidth/2 + ST2_DEFAULT_OFFSET.X), 'positionY': ST2_DEFAULT_OFFSET.Y}")
-		(macro DRAGGABLE_GET_DROP_POSITION _wndName="itemName" _defaults="defaultPos")
+		(macro DRAGGABLE_GET_DROP_POSITION _elementName="itemName" _defaultPosition="defaultPos")
 
 		#pref
 		(macro TT_GET_USERPREF)
@@ -58,12 +58,12 @@
 
 	(block
 		#draggable
-		#(element ModDraggableElement _wndName="itemName" _defaults="defaultPos" _elmSize="{height: ST2_SIZE.Y, width: ST2_SIZE.X}")
+		#(element ModDraggableElement _elementName="itemName" _defaultPosition="defaultPos" _elmSize="{height: ST2_SIZE.Y, width: ST2_SIZE.X}")
 		(controller $Instance renderer='ModDraggableElement'
 			(bind enabled "!isPositionLocked")
 			(args
-				_wndName="itemName"
-				_defaults="defaultPos"
+				_elementName="itemName"
+				_defaultPosition="defaultPos"
 			)
 		)
 		(style
