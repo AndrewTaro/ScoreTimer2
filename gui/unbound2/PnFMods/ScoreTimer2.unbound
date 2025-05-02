@@ -46,12 +46,22 @@
 		(var timeToWinItemName:str = "isAlly ? 'allyTimeToWin' : 'enemyTimeToWin'")
 		(var winningStates:array = "isAlly ? ST2_RESULT_PREDICTION.ALLY_WINNING : ST2_RESULT_PREDICTION.ENEMY_WINNING")
 		(var battleDataEntity:gfx = "$datahub.getSingleEntity(CC.battleData)")
-		(var dataComponent:gfx = "battleDataEntity.data" (event "battleDataEntity.evAdded"))
-		(var scoreTimerData:dict = "dataComponent.data" (event "dataComponent.evChanged"))
-		(var resultPrediction:number = "scoreTimerData ? scoreTimerData.resultPrediction : -1")
-		(var isHighPrecision:bool = "scoreTimerData && 'highPrecision' in scoreTimerData ? scoreTimerData.highPrecision : false")
-		(var winTime:number = "	scoreTimerData ? scoreTimerData[timeToWinItemName] : -1")
+		(var dataComponent:gfx = "battleDataEntity && battleDataEntity.hasComponent(CC.data) ? battleDataEntity.data : null" (event "battleDataEntity.evAdded"))
+		(var scoreTimerData:dict = "dataComponent ? dataComponent.data : {}" (event "dataComponent.evChanged"))
+		(var resultPrediction:number = "'resultPrediction' in scoreTimerData ? scoreTimerData.resultPrediction : -1")
+		(var isHighPrecision:bool = "'highPrecision' in scoreTimerData ? scoreTimerData.highPrecision : false")
+		(var winTime:number = "timeToWinItemName in scoreTimerData ? scoreTimerData[timeToWinItemName] : -1")
 		(var isWinning:bool = "isIn(resultPrediction, winningStates)")
+
+		(var animatedWinTime:number = "winTime" watch=false)
+		(controller $Animation
+			(bindcall play 
+				to       = "{animatedWinTime:  winTime}"
+				duration = "0.6"
+				action	 = "killAll"
+				easing	 = "Easing.cubic_out"
+			)
+		)
 
 		#drag-drop
 		(macro STAGE_SIZE)
@@ -119,17 +129,16 @@
 				(hitTest = false)
 				(bind flow "isAlly ? Flow.HORIZONTAL : Flow.REVERSE_HORIZONTAL")
 			)
-			(element ScoreTimer2StatusIconItem _isAlly="isAlly" _isWinning="isWinning" _winTime="winTime")
-			(element ScoreTimer2TimerItem _isAlly="isAlly" _isWinning="isWinning" _winTime="winTime" _isHighPrecision="isHighPrecision")
+			(element ScoreTimer2StatusIconItem _isAlly="isAlly" _isWinning="isWinning" _winTime="animatedWinTime")
+			(element ScoreTimer2TimerItem _isAlly="isAlly" _isWinning="isWinning" _winTime="animatedWinTime" _isHighPrecision="isHighPrecision")
 		)
 	)
 )
 
 (def element ScoreTimer2StatusIconItem(_isAlly:bool, _isWinning:bool) layout=true
 	(scope
-		(var iconTeam:str = "_isAlly	? 'ally' : 'enemy'")
-		(var iconType:str = "_isWinning ? 'filled' : 'empty'")
-		(var iconPath:str = "'url:../../PnFMods/ScoreTimerPy/scoretimer_icons/point_' + iconTeam + '_' + iconType + '.png'")
+		(var color:number = "_isAlly	? SC.Ui_styles.SERVICE_COLORS.GREEN
+										: SC.Ui_styles.SERVICE_COLORS.DARK_RED")
 
 		(event evIsWinningChanged)
 	)
@@ -137,13 +146,12 @@
 	(dispatch evIsWinningChanged init=false (bind enabled "_isWinning") (bind trigger "_isWinning"))
 
 	(style
-		(width = 26)
-		(height = 26)
-		(bind backgroundImage "iconPath")
-		(backgroundSize = "fill")
+		(width = 20)
+		(height = 20)
 		(pivotX = 50%)
 		(pivotY = 50%)
 	)
+	(element ScoreTimer2DiamondItem _color="color" _isFill="_isWinning")
 	(controller $Animation
 		(bindcall play  duration="0.3"
 						easing="Easing.cubic_out"
@@ -157,6 +165,36 @@
 						from="{ visualScaleX: 4.0, visualScaleY: 4.0 }"
 						to=	 "{ visualScaleX: 1.0, visualScaleY: 1.0 }"
 						(event "evIsWinningChanged")
+		)
+	)
+)
+
+(def element ScoreTimer2DiamondItem(_color:number, _isFill:bool)
+	(scope
+		(var size:number = "10")
+	)
+	(class $MiddleVHAbsolutely)
+	(style
+		(bind width "size")
+		(bind height "size")
+		(rotation = 45)
+		(pivotX = 50%)
+		(pivotY = 50%)
+	)
+	(block
+		(.graphics
+			(lineStyle 1 "_color" 1)
+			(drawRect 0 0 "size" "size")
+			(endFill)
+		)
+	)
+	(block
+		(bind visible "_isFill")
+		(.graphics
+			(lineStyle 1 "_color" 1)
+			(beginFill "_color" 1)
+			(drawRect 0 0 "size" "size")
+			(endFill)
 		)
 	)
 )
