@@ -40,6 +40,8 @@
 
 (def element ScoreTimer2TeamInfoItem(isAlly:bool) layout=true
 	(scope
+		(event evInBattleChanged)
+
 		#battledata
 		(var timeToWinItemName:str = "isAlly ? 'allyTimeToWin' : 'enemyTimeToWin'")
 		(var winningStates:array = "isAlly ? ST2_RESULT_PREDICTION.ALLY_WINNING : ST2_RESULT_PREDICTION.ENEMY_WINNING")
@@ -67,11 +69,13 @@
 		(macro TT_GET_PREF_NUMBER	_varName="'bgDisplayMode'"			_pref="ST2_PREFS.BACKGROUND.DISPLAY_MODE")
 		(macro TT_GET_PREF_NUMBER	_varName="'bgAlpha'"				_pref="ST2_PREFS.BACKGROUND.ALPHA")
 		(var isBackgroundVisible:bool = "bgDisplayMode == ST2_DISPLAY_MODES.ADAPTIVE ? altVision : bgDisplayMode")
+
+		(var battleDataEntity:gfx = "$datahub.getSingleEntity(CC.battleData)")
+		(var battleState:number = "battleDataEntity.battleState.battleState" (event "battleDataEntity.battleState.evBattleStateChanged"))
+        (var isInBattle:bool = "battleState == SC.Common.CLIENT_BATTLE_STATE.STARTED")
 	)
 
 	(block
-		#draggable
-		#(element ModDraggableElement _elementName="itemName" _defaultPosition="defaultPos" _elmSize="{height: ST2_SIZE.HEIGHT, width: ST2_SIZE.WIDTH}")
 		(controller $Instance renderer='ModDraggableElement'
 			(bind enabled "!isPositionLocked")
 			(args
@@ -85,7 +89,20 @@
 			(bind top "dragPosY")
 			(width = "ST2_SIZE.WIDTH")
 			(height = "ST2_SIZE.HEIGHT")
+			(alpha = 0)
 		)
+
+		(dispatch evInBattleChanged args="{}" on=addedToStage (bind enabled "isInBattle")(bind trigger "isInBattle"))
+		(controller $Animation
+			(bindcall play 
+				from     = "{visualOffsetY: -10, alpha: 0}"
+				to       = "{visualOffsetY:   0, alpha: 1}"
+				reverse	 = "!isInBattle"
+				duration = "0.3"
+				(event "evInBattleChanged")
+			)
+		)
+
 		#background
 		(mc contrast_panel
 			(bind visible "isBackgroundVisible")
