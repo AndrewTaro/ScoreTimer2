@@ -183,7 +183,7 @@
 	)
 	(block
 		(.graphics
-			(lineStyle 1 "_color" 1)
+			(lineStyle 2 "_color" 1)
 			(drawRect 0 0 "size" "size")
 			(endFill)
 		)
