@@ -30,7 +30,10 @@
 
 (def element ScoreTimer2() layout=true
 	(scope
+		(macro IS_SPECTATOR_MODE)
 	)
+	(bind visible "!isSpectatorTrainingMode")
+	
 	(block
 		#(macro trace "'mainscnere is here'")
 		(element ScoreTimer2TeamInfoItem isAlly="true")
