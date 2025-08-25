@@ -68,7 +68,7 @@
 		(macro STAGE_SIZE)
 		(var teamType:str = "isAlly ? 'Ally' : 'Enemy'")
 		(var itemName:str = "ST2_ELEMENT_NAME + teamType")
-		(var defaultPos:dict = "{'positionX': isAlly ? (stageWidth/2 - ST2_SIZE.WIDTH - ST2_DEFAULT_OFFSET.X) : (stageWidth/2 + ST2_DEFAULT_OFFSET.X), 'positionY': ST2_DEFAULT_OFFSET.Y}")
+		(var defaultPos:dict = "{'positionX': isAlly ? (stageWidth/2 - ST2_SIZE.WIDTH - ST2_DEFAULT_OFFSET.X) : (stageWidth/2 + ST2_SIZE.WIDTH + ST2_DEFAULT_OFFSET.X), 'positionY': ST2_DEFAULT_OFFSET.Y}")
 		(macro DRAGGABLE_GET_DROP_POSITION _elementName="itemName" _defaultPosition="defaultPos")
 
 		#pref
@@ -100,6 +100,7 @@
 			(width = "ST2_SIZE.WIDTH")
 			(height = "ST2_SIZE.HEIGHT")
 			(alpha = 0)
+			(pivotX = 50%)
 		)
 
 		(dispatch evInBattleChanged args="{}" on=addedToStage (bind enabled "isInBattle")(bind trigger "isInBattle"))
