@@ -30,48 +30,68 @@
 
 (def element ScoreTimer2() layout=true
 	(scope
+		(var selfPlayerEntity:gfx = "$datahub.getSingleEntity(CC.playerAvatar)")
+		(var selfAvatar:gfx = "selfPlayerEntity ? selfPlayerEntity.avatar : null")
+
+		(var teamId:number = "selfAvatar ? selfAvatar.teamId : 0" (event "selfAvatar.evTeamIdChanged"))
+		(var selfTeamId:number = "teamId == 100 ? 0 : teamId")
+		(var enemyTeamId:number = "selfTeamId == 1 ? 0 : 1")
+
+		(var teamScores:gfx = "$datahub.getCollection(CC.teamScore)")
+		(var allyTeamScore:gfx = "teamScores.items[selfTeamId].teamScore")
+		(var enemyTeamScore:gfx = "teamScores.items[enemyTeamId].teamScore")
+
+		(var allyTeamScoreTimer:gfx = "teamScores.items[selfTeamId].teamScoreTimer")
+		(var enemyTeamScoreTimer:gfx = "teamScores.items[enemyTeamId].teamScoreTimer")
 	)
-	
-	(block
-		#(macro trace "'mainscnere is here'")
-		(element ScoreTimer2TeamInfoItem isAlly="true")
-		(element ScoreTimer2TeamInfoItem isAlly="false")
-	)
+	(element ScoreTimer2TeamItem _stComponent="allyTeamScoreTimer" _isAlly=true)
+	(element ScoreTimer2TeamItem _stComponent="enemyTeamScoreTimer" _isAlly=false)
 )
 
-(def element ScoreTimer2TeamInfoItem(isAlly:bool) layout=true
+(def element ScoreTimer2TeamItem(_stComponent:gfx, _isAlly:bool) layout=true
 	(scope
 		(event evInBattleChanged)
 
-		#battledata
-		(var timeToWinItemName:str = "isAlly ? 'allyTimeToWin' : 'enemyTimeToWin'")
-		(var winningStates:array = "isAlly ? ST2_RESULT_PREDICTION.ALLY_WINNING : ST2_RESULT_PREDICTION.ENEMY_WINNING")
 		(var battleDataEntity:gfx = "$datahub.getSingleEntity(CC.battleData)")
-		(var dataComponent:gfx = "battleDataEntity && battleDataEntity.hasComponent(CC.data) ? battleDataEntity.data : null" (event "battleDataEntity.evAdded"))
-		(var scoreTimerData:dict = "dataComponent ? dataComponent.data : {}" (event "dataComponent.evChanged"))
-		(var resultPrediction:number = "'resultPrediction' in scoreTimerData ? scoreTimerData.resultPrediction : -1")
-		(var isHighPrecision:bool = "'highPrecision' in scoreTimerData ? scoreTimerData.highPrecision : false")
-		(var winTime:number = "timeToWinItemName in scoreTimerData ? scoreTimerData[timeToWinItemName] : -1")
-		(var isWinning:bool = "isIn(resultPrediction, winningStates)")
+		(var battleInfoComp:gfx = "battleDataEntity ? battleDataEntity.battleInfo : null")
+		(var battleTimerComp:gfx = "battleDataEntity ? battleDataEntity.battleTimer : null")
+		(var battleStateComp:gfx = "battleDataEntity ? battleDataEntity.battleState : null")
 
-		(var animatedWinTime:number = "winTime" watch=false)
+		(var battleTime:number = "battleTimerComp ? battleTimerComp.battleTime : 0" (event "battleTimerComp.evBattleTimeChanged"))
+		(var battleDuration:number = "battleInfoComp ? battleInfoComp.duration * 60 : 0")
+		(var battleTimeLeft:number = "battleDuration - battleTime")
+		
+		(var isHidden:bool = "_stComponent ? _stComponent.hidden : true" (event "_stComponent.evChanged"))
+		(var isBattleDurationExceeded:bool = "_stComponent ? _stComponent.timeLeft >= battleTimeLeft : false" (event "_stComponent.evChanged"))
+		
+		# (var timeLeft:number = "_stComponent ? min(_stComponent.timeLeft, battleTimeLeft) : 0" (event "_stComponent.evChanged"))
+		(var timeLeft:number = "_stComponent ? _stComponent.timeLeft : 0" (event "_stComponent.evChanged"))
+		(var timeLeftAnimated:number = "timeLeft" watch=false)
+		(bind timeLeftAnimated "timeLeft" init=false (bind enabled "isBattleDurationExceeded"))
+
+		(var isWinTimeInvalid:bool = "timeLeftAnimated >= 6000 || isBattleDurationExceeded")
+		(var winTimeText:str = "isWinTimeInvalid ? '--:--' : countdownFormat(timeLeftAnimated, 0, true)")
+
+		(var isWinning:bool = "_stComponent ? _stComponent.victoryMarkerVisible : false" (event "_stComponent.evChanged"))
+
 		(controller $Animation
-			(bindcall play 
-				to       = "{animatedWinTime:  winTime}"
-				duration = "0.6"
-				action	 = "killAll"
-				easing	 = "Easing.cubic_out"
+			(bindcall play
+				to="{timeLeftAnimated: timeLeft}"
+				duration=0.3
+				easing="Easing.line"
+				(event "_stComponent.evChanged")
+				(bind enabled "!isBattleDurationExceeded")
 			)
 		)
 
-		#drag-drop
+		# Drag & Drop
 		(macro STAGE_SIZE)
-		(var teamType:str = "isAlly ? 'Ally' : 'Enemy'")
+		(var teamType:str = "_isAlly ? 'Ally' : 'Enemy'")
 		(var itemName:str = "ST2_ELEMENT_NAME + teamType")
-		(var defaultPos:dict = "{'positionX': isAlly ? (stageWidth/2 - ST2_SIZE.WIDTH - ST2_DEFAULT_OFFSET.X) : (stageWidth/2 + ST2_SIZE.WIDTH + ST2_DEFAULT_OFFSET.X), 'positionY': ST2_DEFAULT_OFFSET.Y}")
+		(var defaultPos:dict = "{'positionX': _isAlly ? (stageWidth/2 - ST2_SIZE.WIDTH - ST2_DEFAULT_OFFSET.X) : (stageWidth/2 + ST2_SIZE.WIDTH + ST2_DEFAULT_OFFSET.X), 'positionY': ST2_DEFAULT_OFFSET.Y}")
 		(macro DRAGGABLE_GET_DROP_POSITION _elementName="itemName" _defaultPosition="defaultPos")
 
-		#pref
+		# Pref
 		(var cameraComponent:gfx = "$datahub.getSingleComponent(CC.camera)")
 	    (var altVision:bool = "cameraComponent ? cameraComponent.altVision : false" (event "cameraComponent.evAltVisionChanged"))
 
@@ -81,9 +101,18 @@
 		(macro TT_GET_PREF_NUMBER	_varName="'bgAlpha'"				_pref="ST2_PREFS.BACKGROUND.ALPHA")
 		(var isBackgroundVisible:bool = "bgDisplayMode == ST2_DISPLAY_MODES.ADAPTIVE ? altVision : bgDisplayMode")
 
-		(var battleState:number = "battleDataEntity.battleState.battleState" (event "battleDataEntity.battleState.evBattleStateChanged"))
+		(var battleState:number = "battleStateComp ? battleStateComp.battleState : SC.Common.CLIENT_BATTLE_STATE.INVALID" (event "battleStateComp.evBattleStateChanged"))
         (var isInBattle:bool = "battleState == SC.Common.CLIENT_BATTLE_STATE.STARTED")
+		
+		(var timerColor:number = "
+			isWinTimeInvalid	? 0xFFCCCCCC :
+			isWinning			? _isAlly	? SC.Ui_styles.SERVICE_COLORS.GREEN
+											: SC.Ui_styles.SERVICE_COLORS.DARK_RED
+											: SC.Ui_styles.SERVICE_COLORS.WHITE
+		")
 	)
+
+	#(bind visible "!isHidden")
 
 	(block
 		(controller $Instance renderer='ModDraggableElement'
@@ -109,12 +138,12 @@
 				from     = "{visualOffsetY: -10, alpha: 0}"
 				to       = "{visualOffsetY:   0, alpha: 1}"
 				reverse	 = "!isInBattle"
-				duration = "0.3"
+				duration = 0.3
 				(event "evInBattleChanged")
 			)
 		)
 
-		#background
+		# Background
 		(mc contrast_panel
 			(bind visible "isBackgroundVisible")
 			(class $FullsizeAbsolute)
@@ -123,16 +152,32 @@
 				(hitTest = false)
 			)
 		)
-		#info
+		# Info
 		(hblock
+			(style
+				(gap = 4px)
+			)
 			(class $Fullsize)
 			(style
-				(align = "middle|center")
+				(bind align "_isAlly ? middle|left : middle|right")
 				(hitTest = false)
-				(bind flow "isAlly ? Flow.HORIZONTAL : Flow.REVERSE_HORIZONTAL")
+				(bind flow "_isAlly ? Flow.HORIZONTAL : Flow.REVERSE_HORIZONTAL")
+				(bind "_isAlly ? 'paddingLeft' : 'paddingRight'" 6px)
 			)
-			(element ScoreTimer2StatusIconItem _isAlly="isAlly" _isWinning="isWinning" _winTime="animatedWinTime")
-			(element ScoreTimer2TimerItem _isAlly="isAlly" _isWinning="isWinning" _winTime="animatedWinTime" _isHighPrecision="isHighPrecision")
+			(element ScoreTimer2StatusIconItem _isAlly="_isAlly" _isWinning="isWinning" _winTime="timeLeftAnimated")
+
+			(block
+				(tf
+					(class $TextDefaultBold21NM)
+					(style
+						(bind textAlign "_isAlly ? left : right")
+						(bind textColor "timerColor")
+						(fontSize = "21")
+						(bind marginTextTop "isWinTimeInvalid ? -12px : -9px")
+					)
+					(bind text "winTimeText")
+				)
+			)
 		)
 	)
 )
@@ -153,25 +198,22 @@
 		(pivotX = 50%)
 		(pivotY = 50%)
 	)
-	(element ScoreTimer2DiamondItem _color="color" _isFill="_isWinning")
+	(element ScoreTimer2DiamondItem _color="color" _isFilled="_isWinning")
 	(controller $Animation
-		(bindcall play  duration="0.3"
-						easing="Easing.cubic_out"
-						from="{ visualScaleX: 1.0, visualScaleY: 1.0 }"
-						to=	 "{ visualScaleX: 4.0, visualScaleY: 4.0 }"
-						(event "evIsWinningChanged")
-		)
-		(bindcall play  duration="0.15"
-						delay="0.3"
-						easing="Easing.cubic_out"
-						from="{ visualScaleX: 4.0, visualScaleY: 4.0 }"
-						to=	 "{ visualScaleX: 1.0, visualScaleY: 1.0 }"
-						(event "evIsWinningChanged")
+		(bindcall play
+			duration	= 0.75
+			keyframes	= "[
+				{percent:   0, to: {visualScaleX: 1, visualScaleY: 1}, easing: Easing.cubic_out},
+				{percent:  75, to: {visualScaleX: 4, visualScaleY: 4}, easing: Easing.cubic_out},
+				{percent: 100, to: {visualScaleX: 1, visualScaleY: 1}, easing: Easing.cubic_out}
+			]"
+			action		= "killAll"
+			(event "evIsWinningChanged")
 		)
 	)
 )
 
-(def element ScoreTimer2DiamondItem(_color:number, _isFill:bool)
+(def element ScoreTimer2DiamondItem(_color:number, _isFilled:bool)
 	(scope
 		(var size:number = "10")
 	)
@@ -191,7 +233,7 @@
 		)
 	)
 	(block
-		(bind visible "_isFill")
+		(bind visible "_isFilled")
 		(.graphics
 			(lineStyle 1 "_color" 1)
 			(beginFill "_color" 1)
@@ -201,36 +243,28 @@
 	)
 )
 
-(def element ScoreTimer2TimerItem(_isAlly:bool, _isWinning:bool, _winTime:number, _isHighPrecision:bool) layout=true
+(def element ScoreTimer2StrikeLine(_top:number) layout=true
 	(scope
-		(var timer:gfx = "$datahub.getSingleComponent(CC.timer)")
-		(var currentTime:number = "timer.currentTime" (event "timer.evInfrequent"))
-		(var winTime:number = "_isHighPrecision ? _winTime - currentTime : _winTime")
-		(var timerColor:number = "	_isWinning	?
-										_isAlly	? SC.Ui_styles.SERVICE_COLORS.GREEN
-												: SC.Ui_styles.SERVICE_COLORS.DARK_RED
-									: SC.Ui_styles.SERVICE_COLORS.WHITE")
-		(var isWinTimeValid:bool = "(winTime != null) && (0 <= winTime) && (winTime < 6000)")
-		(var winTimeText:str = "isWinTimeValid ? countdownFormat(winTime, 0, true) : '--:--'")
-		(var marginSize:number = "isWinTimeValid ? 0px : 4px")
 	)
 
 	(style
-		(width = 55)
-		(height = 100%)
-	)
-
-	(tf
-		(class $TextDefaultBold)
-		(style
-			(bind textAlign "_isAlly ? left : right")
-			(bind textColor "timerColor")
-			(fontSize = "21")
-			(bind marginTop "isWinTimeValid ? 1px : -1px")
-			(bind paddingLeft "_isAlly ? marginSize : 0px")
-			(bind paddingRight "!_isAlly ? marginSize : 0px")
-			(width = 100%)
+		(position = "absolute")
+		(bind top "_top")
+		(marginTop = -50%)
+		(width = 100%)
+		(height = 2px)
+		(backgroundColor = 0xFFCCCCCC)
+		(filters
+			(dropShadow
+				(distance = 0)
+				(angle = 90)
+				(color = 0)
+				(alpha = 0.8)
+				(blurX = 4)
+				(blurY = 4)
+				(strength = 1.2)
+				(quality = 2)
+			)
 		)
-		(bind text "winTimeText")
 	)
 )
