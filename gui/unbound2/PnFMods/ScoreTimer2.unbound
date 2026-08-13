@@ -1,9 +1,3 @@
-(def constant TT_SCORETIMER_INSTALLED true) #for modconfig
-(def constant ST2_ELEMENT_NAME "'scoreTimer2'")
-(def constant ST2_DEFAULT_OFFSET {
-	X: 4,
-	Y: 120
-})
 (def constant ST2_SIZE {
 	WIDTH	: 84px,
 	HEIGHT	: 34px
@@ -21,11 +15,7 @@
 	ENEMY_WINNING: [4, 5]
 })
 
-(def constant ST2_DISPLAY_MODES {
-	DISABLE : 0,
-	ENABLE  : 1,
-	ADAPTIVE: 2,
-})
+# The off/on/alt-vision triple is TT_CONST.DISPLAY_MODE now -- the one shared enum.
 
 
 (def element ScoreTimer2() layout=true
@@ -84,22 +74,24 @@
 			)
 		)
 
-		# Drag & Drop
-		(macro STAGE_SIZE)
-		(var teamType:str = "_isAlly ? 'Ally' : 'Enemy'")
-		(var itemName:str = "ST2_ELEMENT_NAME + teamType")
-		(var defaultPos:dict = "{'positionX': _isAlly ? (stageWidth/2 - ST2_SIZE.WIDTH - ST2_DEFAULT_OFFSET.X) : (stageWidth/2 + ST2_SIZE.WIDTH + ST2_DEFAULT_OFFSET.X), 'positionY': ST2_DEFAULT_OFFSET.Y}")
-		(macro DRAGGABLE_GET_DROP_POSITION _elementName="itemName" _defaultPosition="defaultPos")
+		# Drag & Drop.  Ally and enemy are two independent position nodes, so the key is a per-side
+		# PREFIX; the three settings below are shared and stay literal.  Python owns the value, the
+		# resKey bucket and the first-placement default (center -/+ 88, top 120 -- the legacy default
+		# verbatim, against the same 50% pivot the block already had).
+		(var st2SidePref:str = "_isAlly ? 'scoreTimer.ally' : 'scoreTimer.enemy'")
+		(macro TT_DRAGGABLE_POSITION _fullKey="st2SidePref + '.position'")
 
 		# Pref
 		(var cameraComponent:gfx = "$datahub.getSingleComponent(CC.camera)")
 	    (var altVision:bool = "cameraComponent ? cameraComponent.altVision : false" (event "cameraComponent.evAltVisionChanged"))
 
-		(macro TT_GET_USERPREF)
-		(macro TT_GET_PREF_BOOL		_varName="'isPositionLocked'"		_pref="ST2_PREFS.DISABLE_DRAGDROP")
-		(macro TT_GET_PREF_NUMBER	_varName="'bgDisplayMode'"			_pref="ST2_PREFS.BACKGROUND.DISPLAY_MODE")
-		(macro TT_GET_PREF_NUMBER	_varName="'bgAlpha'"				_pref="ST2_PREFS.BACKGROUND.ALPHA")
-		(var isBackgroundVisible:bool = "bgDisplayMode == ST2_DISPLAY_MODES.ADAPTIVE ? altVision : bgDisplayMode")
+		(macro TT_GET_PREF _varName="'dragLockPref'" _key="'scoreTimer.disableDragdrop'")
+		(var isPositionLocked:bool = "null != dragLockPref && null != dragLockPref.value ? dragLockPref.value : false")
+		(macro TT_GET_PREF _varName="'bgModePref'" _key="'scoreTimer.background.displayMode'")
+		(var bgDisplayMode:number = "null != bgModePref && null != bgModePref.value ? bgModePref.value : TT_CONST.DISPLAY_MODE.ENABLED")
+		(macro TT_GET_PREF _varName="'bgAlphaPref'" _key="'scoreTimer.background.alpha'")
+		(var bgAlpha:number = "null != bgAlphaPref && null != bgAlphaPref.value ? bgAlphaPref.value : 0.4")
+		(var isBackgroundVisible:bool = "bgDisplayMode == TT_CONST.DISPLAY_MODE.ADAPTIVE ? altVision : bgDisplayMode")
 
 		(var battleState:number = "battleStateComp ? battleStateComp.battleState : SC.Common.CLIENT_BATTLE_STATE.INVALID" (event "battleStateComp.evBattleStateChanged"))
         (var isInBattle:bool = "battleState == SC.Common.CLIENT_BATTLE_STATE.STARTED")
@@ -115,21 +107,28 @@
 	#(bind visible "!isHidden")
 
 	(block
-		(controller $Instance renderer='ModDraggableElement'
-			(bind enabled "!isPositionLocked")
-			(args
-				_elementName="itemName"
-				_defaultPosition="defaultPos"
-			)
-		)
 		(style
 			(position = "absolute")
-			(bind left "dragPosX")
-			(bind top "dragPosY")
+			(bind left "dragX")
+			(bind top "dragY")
 			(width = "ST2_SIZE.WIDTH")
 			(height = "ST2_SIZE.HEIGHT")
 			(alpha = 0)
+			# Unchanged: the schema's center anchor matches the 50% pivot that was already here, and
+			# the resolved origin is the legacy stageWidth/2 -/+ 88 exactly.
 			(pivotX = 50%)
+		)
+
+		# Drag surface -- full-size over this block, declared before the background and content so the
+		# injected signifier stays behind them.
+		(block
+			(class $FullsizeAbsolute)
+			# hitTest is a STYLE property when BOUND -- directly under a (block ...) it throws at build time.
+			(style
+				(backgroundColor = 0x00FFFFFF)
+				(bind hitTest "!isPositionLocked")
+			)
+			(macro TT_DRAGGABLE _fullKey="st2SidePref + '.position'" _isDragEnabled="!isPositionLocked")
 		)
 
 		(dispatch evInBattleChanged args="{}" on=addedToStage (bind enabled "isInBattle")(bind trigger "isInBattle"))
