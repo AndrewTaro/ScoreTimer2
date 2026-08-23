@@ -85,7 +85,7 @@
 		(var cameraComponent:gfx = "$datahub.getSingleComponent(CC.camera)")
 	    (var altVision:bool = "cameraComponent ? cameraComponent.altVision : false" (event "cameraComponent.evAltVisionChanged"))
 
-		(macro TT_GET_PREF _varName="'dragLockPref'" _key="'scoreTimer.disableDragdrop'")
+		(macro TT_GET_PREF _varName="'dragLockPref'" _key="'scoreTimer.disableDragDrop'")
 		(var isPositionLocked:bool = "null != dragLockPref && null != dragLockPref.value ? dragLockPref.value : false")
 		(macro TT_GET_PREF _varName="'bgModePref'" _key="'scoreTimer.background.displayMode'")
 		(var bgDisplayMode:number = "null != bgModePref && null != bgModePref.value ? bgModePref.value : TT_CONST.DISPLAY_MODE.ENABLED")
