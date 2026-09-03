@@ -78,18 +78,18 @@
 		# PREFIX; the three settings below are shared and stay literal.  Python owns the value, the
 		# resKey bucket and the first-placement default (center -/+ 88, top 120 -- the legacy default
 		# verbatim, against the same 50% pivot the block already had).
-		(var st2SidePref:str = "_isAlly ? 'scoreTimer.ally' : 'scoreTimer.enemy'")
+		(var st2SidePref:str = "_isAlly ? 'ttaro.scoreTimer.ally' : 'ttaro.scoreTimer.enemy'")
 		(macro TT_DRAGGABLE_POSITION _fullKey="st2SidePref + '.position'")
 
 		# Pref
 		(var cameraComponent:gfx = "$datahub.getSingleComponent(CC.camera)")
 	    (var altVision:bool = "cameraComponent ? cameraComponent.altVision : false" (event "cameraComponent.evAltVisionChanged"))
 
-		(macro TT_GET_PREF _varName="'dragLockPref'" _key="'scoreTimer.disableDragDrop'")
+		(macro TT_GET_PREF _varName="'dragLockPref'" _key="'ttaro.scoreTimer.disableDragDrop'")
 		(var isPositionLocked:bool = "null != dragLockPref && null != dragLockPref.value ? dragLockPref.value : false")
-		(macro TT_GET_PREF _varName="'bgModePref'" _key="'scoreTimer.background.displayMode'")
+		(macro TT_GET_PREF _varName="'bgModePref'" _key="'ttaro.scoreTimer.background.displayMode'")
 		(var bgDisplayMode:number = "null != bgModePref && null != bgModePref.value ? bgModePref.value : TT_CONST.DISPLAY_MODE.ENABLED")
-		(macro TT_GET_PREF _varName="'bgAlphaPref'" _key="'scoreTimer.background.alpha'")
+		(macro TT_GET_PREF _varName="'bgAlphaPref'" _key="'ttaro.scoreTimer.background.alpha'")
 		(var bgAlpha:number = "null != bgAlphaPref && null != bgAlphaPref.value ? bgAlphaPref.value : 0.4")
 		(var isBackgroundVisible:bool = "bgDisplayMode == TT_CONST.DISPLAY_MODE.ADAPTIVE ? altVision : bgDisplayMode")
 
