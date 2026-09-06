@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 4,
+  "opVocabularyVersion": 1,
+  "slug": "score-timer",
+  "migrations": [
+    {
+      "version": 1,
+      "description": "flat keys → dotted ancestry keys; slider step index → value",
+      "ops": [
+        {
+          "op": "rename",
+          "from": "scoreTimerBackgroundDisplayMode",
+          "to": "scoreTimer.background.displayMode"
+        },
+        {
+          "op": "rename",
+          "from": "scoreTimerBackgroundOpacity",
+          "to": "scoreTimer.background.alpha"
+        },
+        {
+          "op": "rename",
+          "from": "scoreTimerDisableDragDrop",
+          "to": "scoreTimer.disableDragDrop"
+        },
+        {
+          "op": "transform",
+          "from": "scoreTimer.background.alpha",
+          "to": "scoreTimer.background.alpha",
+          "transform": "stepIndex",
+          "args": {
+            "min": 0.1,
+            "step": 0.1
+          }
+        }
+      ]
+    }
+  ],
+  "legacyPositions": [
+    {
+      "key": "scoreTimer.ally.position",
+      "element": "scoreTimer2Ally"
+    },
+    {
+      "key": "scoreTimer.enemy.position",
+      "element": "scoreTimer2Enemy"
+    }
+  ]
+}

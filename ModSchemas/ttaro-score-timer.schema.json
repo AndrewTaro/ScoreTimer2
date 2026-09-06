@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 4,
+  "id": "cmtkswuwq0009v014mezt0r03",
+  "author": "ttaro",
+  "modName": "Score Timer",
+  "slug": "score-timer",
+  "order": 9,
+  "tree": [
+    {
+      "kind": "group",
+      "key": "cmtktaml700jnv0d446l3pc97",
+      "label": "IDS_TT_TITLE_GENERAL",
+      "collapse": "expanded",
+      "children": [
+        {
+          "kind": "setting",
+          "control": "toggle",
+          "key": "scoreTimer.disableDragDrop",
+          "label": "IDS_TT_DISABLE_DRAG_DROP",
+          "hint": {
+            "text": "IDS_TT_HINT_DISABLE_DRAG_DROP"
+          },
+          "default": false
+        },
+        {
+          "kind": "group",
+          "key": "cmtktam4i0060v0d45u6ubjwp",
+          "label": "IDS_TT_ALLY_PANEL",
+          "children": [
+            {
+              "kind": "setting",
+              "control": "position",
+              "key": "scoreTimer.ally.position",
+              "label": "IDS_TT_DRAGDROP_RESET",
+              "hint": {
+                "text": "IDS_TT_HINT_DRAGDROP_RESET"
+              },
+              "defaultPosition": {
+                "x": {
+                  "anchor": "center",
+                  "offset": -88
+                },
+                "y": {
+                  "anchor": "top",
+                  "offset": 120
+                }
+              }
+            }
+          ]
+        },
+        {
+          "kind": "group",
+          "key": "cmtktamay00b7v0d4ff0s658h",
+          "label": "IDS_TT_ENEMY_PANEL",
+          "children": [
+            {
+              "kind": "setting",
+              "control": "position",
+              "key": "scoreTimer.enemy.position",
+              "label": "IDS_TT_DRAGDROP_RESET",
+              "hint": {
+                "text": "IDS_TT_HINT_DRAGDROP_RESET"
+              },
+              "defaultPosition": {
+                "x": {
+                  "anchor": "center",
+                  "offset": 88
+                },
+                "y": {
+                  "anchor": "top",
+                  "offset": 120
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "group",
+      "key": "cmtktamj700i2v0d4z6irgf9k",
+      "label": "IDS_TT_TITLE_BACKGROUND",
+      "collapse": "expanded",
+      "children": [
+        {
+          "kind": "setting",
+          "control": "dropdown",
+          "key": "scoreTimer.background.displayMode",
+          "label": "IDS_TT_DISPLAY_MODE",
+          "hint": {
+            "text": "IDS_TT_HINT_DISPLAY_MODE"
+          },
+          "default": 1,
+          "options": [
+            {
+              "value": 0,
+              "phrase": "IDS_TURN_OFF"
+            },
+            {
+              "value": 1,
+              "phrase": "IDS_TURN_ON"
+            },
+            {
+              "value": 2,
+              "phrase": "IDS_ALT_VISION_MODE_1",
+              "icon": "CMD_ICONS"
+            }
+          ],
+          "optionStyle": "KEY"
+        },
+        {
+          "kind": "setting",
+          "control": "slider",
+          "key": "scoreTimer.background.alpha",
+          "label": "IDS_TT_OPACITY",
+          "default": 0.4,
+          "min": 0.1,
+          "max": 1,
+          "step": 0.1,
+          "enabledWhen": {
+            "kind": "group",
+            "join": "all",
+            "conditions": [
+              {
+                "kind": "compare",
+                "key": "scoreTimer.background.displayMode",
+                "op": "in",
+                "values": [
+                  1,
+                  2
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
