@@ -163,7 +163,7 @@
 				(bind flow "_isAlly ? Flow.HORIZONTAL : Flow.REVERSE_HORIZONTAL")
 				(bind "_isAlly ? 'paddingLeft' : 'paddingRight'" 6px)
 			)
-			(element ScoreTimer2StatusIconItem _isAlly="_isAlly" _isWinning="isWinning" _winTime="timeLeftAnimated")
+			(element ScoreTimer2StatusIconItem _isAlly="_isAlly" _isWinning="isWinning")
 
 			(block
 				(tf
@@ -189,7 +189,7 @@
 		(event evIsWinningChanged)
 	)
 
-	(dispatch evIsWinningChanged init=false (bind enabled "_isWinning") (bind trigger "_isWinning"))
+	(dispatch evIsWinningChanged (bind enabled "_isWinning") (bind trigger "_isWinning"))
 
 	(style
 		(width = 20)
