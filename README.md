@@ -12,7 +12,7 @@ You must install the following for this mod to work:
 
 # Install
 1. Download a zip.
-2. Unzip the archive and you should get `gui`, `PnFMods`, `ModSchemas` folders, and `PnFModsLoader.py`.
+2. Unzip the archive and you should get `gui`, `PnFMods`, `ModSchemas`, `ForgeBlueprints` folders, and `PnFModsLoader.py`.
 3. Move them to `(wows)/bin/(latest_number)/res_mods/`. So the path will look like `res_mods/PnFModsLoader.py`, etc.
 4. Done!
 
