@@ -1,11 +1,11 @@
 {
   "schemaVersion": 4,
-  "opVocabularyVersion": 1,
+  "opVocabularyVersion": 3,
   "slug": "score-timer",
   "migrations": [
     {
       "version": 1,
-      "description": "flat keys → dotted ancestry keys; slider step index → value",
+      "description": "flat keys → dotted ancestry keys; legacy values decoded and folded onto the derived keys",
       "ops": [
         {
           "op": "rename",
@@ -14,22 +14,32 @@
         },
         {
           "op": "rename",
-          "from": "scoreTimerBackgroundOpacity",
-          "to": "scoreTimer.background.alpha"
-        },
-        {
-          "op": "rename",
           "from": "scoreTimerDisableDragDrop",
           "to": "scoreTimer.disableDragDrop"
         },
         {
           "op": "transform",
-          "from": "scoreTimer.background.alpha",
+          "transform": "compose",
           "to": "scoreTimer.background.alpha",
-          "transform": "stepIndex",
-          "args": {
-            "min": 0.1,
-            "step": 0.1
+          "sources": [
+            {
+              "key": "scoreTimerBackgroundOpacity"
+            }
+          ],
+          "value": {
+            "add": [
+              0.1,
+              {
+                "mul": [
+                  {
+                    "round": {
+                      "src": 0
+                    }
+                  },
+                  0.1
+                ]
+              }
+            ]
           }
         }
       ]
