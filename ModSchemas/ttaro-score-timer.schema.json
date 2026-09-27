@@ -5,6 +5,7 @@
   "modName": "Score Timer",
   "slug": "score-timer",
   "order": 9,
+  "migrationVersion": 1,
   "tree": [
     {
       "kind": "group",
